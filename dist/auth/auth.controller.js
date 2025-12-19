@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const auth_service_1 = require("./auth.service");
-const auth_guard_1 = require("./auth.guard");
+const role_decorator_1 = require("./role.decorator");
 let AuthController = class AuthController {
     authSerice;
     constructor(authSerice) {
@@ -58,7 +58,7 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Get)("password"),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, role_decorator_1.Roles)(["user", "admin"]),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

@@ -1,10 +1,9 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, Request, Res, UseGuards } from "@nestjs/common";
 import { RegisterDTO } from "./dto/register.dto";
 import { LoginDTO } from "./dto/login.dto";
-import { UsersService } from "src/users/users.service";
 import { AuthService } from "./auth.service";
-import { AuthGuard } from "./auth.guard";
 import type { Response } from "express";
+import { Roles } from "./role.decorator";
 
 @Controller()
 export class AuthController {
@@ -29,7 +28,7 @@ export class AuthController {
   }
 
   @Get("password")
-  @UseGuards(AuthGuard)
+  @Roles(["user", "admin"])
   async getPassword(@Request() req: any) {
     return req.user;
   }

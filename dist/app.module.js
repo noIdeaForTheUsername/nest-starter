@@ -13,6 +13,8 @@ const app_service_1 = require("./app.service");
 const packages_module_1 = require("./packages/packages.module");
 const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
+const roles_guard_1 = require("./auth/roles.guard");
+const core_1 = require("@nestjs/core");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,7 +26,13 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule
         ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        providers: [
+            app_service_1.AppService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: roles_guard_1.RolesGuard
+            }
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

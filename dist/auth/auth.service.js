@@ -22,14 +22,14 @@ let AuthService = class AuthService {
     }
     async register(login, password) {
         const user = this.usersService.addUser(login, password);
-        const payload = { sub: user.id, login: user.login };
+        const payload = { sub: user.id, login: user.login, role: user.role };
         return { accessToken: await this.jwtService.signAsync(payload) };
     }
     async login(login, password) {
         const user = await this.usersService.getUserByLogin(login);
         if (!user || user.password !== password)
             throw new common_1.UnauthorizedException("Login or password not correct");
-        const payload = { sub: user.id, login: user.login };
+        const payload = { sub: user.id, login: user.login, role: user.role };
         return { accessToken: await this.jwtService.signAsync(payload) };
     }
 };

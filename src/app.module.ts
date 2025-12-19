@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { PackagesModule } from './packages/packages.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { RolesGuard } from './auth/roles.guard';
+import { APP_GUARD } from '@nestjs/core';
 // import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
@@ -14,6 +16,12 @@ import { AuthModule } from './auth/auth.module';
     //MongooseModule.forRoot("mongodb://localhost/nest")
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard
+    }
+  ],
 })
 export class AppModule {}

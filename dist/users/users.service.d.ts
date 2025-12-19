@@ -1,4 +1,5 @@
 import { User } from "./entity/user.interface";
+import { Role } from "./entity/role.enum";
 export declare class UsersService {
     private users;
     private getUserIndexById;
@@ -10,6 +11,7 @@ export declare class UsersService {
         id: number;
         login: string;
         password: string;
+        role: Role;
     };
     deleteUser(id: number): Promise<void>;
 }
