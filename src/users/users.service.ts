@@ -7,7 +7,7 @@ import { User } from "./entity/user.interface";
 export class UsersService {
   private users: User[] = [];
 
-  private getUserIndexById(id: number, notFoundException: boolean = true, customExceptionMessage?: string) {
+  private async getUserIndexById(id: number, notFoundException: boolean = true, customExceptionMessage?: string) {
     const foundIndex = this.users.findIndex((u) => u.id === id);
     if (foundIndex === -1 && notFoundException) throw new NotFoundException(customExceptionMessage || "User not found");
     return foundIndex;
@@ -21,31 +21,32 @@ export class UsersService {
     return max;
   }
 
-  public getUser(id: number, customExceptionMessage?: string) {
-    return this.users[this.getUserIndexById(id, true, customExceptionMessage)];
+  public async getUser(id: number, customExceptionMessage?: string) {
+    return this.users[await this.getUserIndexById(id, true, customExceptionMessage)];
   }
 
   public getUsers() {
     return this.users;
   }
 
-  public deleteUser(id: number) {
-    this.users.splice(this.getUserIndexById(id), 1);
+  public async getUserByLogin(login: string) {
+    return this.users.find((u) => u.login == login);
   }
 
-  public register(login: string, password: string) {
+  public addUser(login: string, password: string) {
     if (this.users.find((u) => u.login == login))
       throw new ConflictException("User with this login already exists");
-    this.users.push({
+
+    const newUser = {
       id: this.findMaxId() + 1,
       login,
       password
-    });
+    };
+    this.users.push(newUser);
+    return newUser;
   }
 
-  public login(login: string, password: string) {
-    const user = this.users.find((u) => u.login === login);
-    if (user && user.password == password) return;
-    throw new UnauthorizedException("Login or password not correct");
+  public async deleteUser(id: number) {
+    this.users.splice(await this.getUserIndexById(id), 1);
   }
 }
