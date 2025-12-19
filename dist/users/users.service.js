@@ -10,7 +10,7 @@ exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 let UsersService = class UsersService {
     users = [];
-    async getUserIndexById(id, notFoundException = true, customExceptionMessage) {
+    getUserIndexById(id, notFoundException = true, customExceptionMessage) {
         const foundIndex = this.users.findIndex((u) => u.id === id);
         if (foundIndex === -1 && notFoundException)
             throw new common_1.NotFoundException(customExceptionMessage || "User not found");
@@ -24,8 +24,8 @@ let UsersService = class UsersService {
         });
         return max;
     }
-    async getUser(id, customExceptionMessage) {
-        return this.users[await this.getUserIndexById(id, true, customExceptionMessage)];
+    getUser(id, customExceptionMessage) {
+        return this.users[this.getUserIndexById(id, true, customExceptionMessage)];
     }
     getUsers() {
         return this.users;

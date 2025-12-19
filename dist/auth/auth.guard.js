@@ -20,13 +20,13 @@ let AuthGuard = class AuthGuard {
     }
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
-        const token = this.extractTokenFromHeader(request);
+        console.log("request cookies: ", request.cookies, " |  signed: ", request.signedCookies);
+        const token = this.extractTokenFromCookie(request);
+        console.log("processed token: ", token);
         if (!token)
             throw new common_1.UnauthorizedException();
         try {
-            const payload = await this.jwtService.verifyAsync(token, {
-                secret: constants_1.jwtConstants.secret
-            });
+            const payload = await this.jwtService.verifyAsync(token, { secret: constants_1.jwtConstants.secret });
             request["user"] = payload;
         }
         catch {
@@ -34,9 +34,11 @@ let AuthGuard = class AuthGuard {
         }
         return true;
     }
-    extractTokenFromHeader(request) {
-        const [type, token] = request.headers.authorization?.split(" ") ?? [];
-        return type === "Bearer" ? token : undefined;
+    extractTokenFromCookie(request) {
+        const cookie = request.cookies["authJwt"];
+        if (!cookie || typeof cookie !== "string")
+            return undefined;
+        return cookie;
     }
 };
 exports.AuthGuard = AuthGuard;

@@ -3,7 +3,7 @@ export declare class UsersService {
     private users;
     private getUserIndexById;
     private findMaxId;
-    getUser(id: number, customExceptionMessage?: string): Promise<User>;
+    getUser(id: number, customExceptionMessage?: string): User;
     getUsers(): User[];
     getUserByLogin(login: string): Promise<User | undefined>;
     addUser(login: string, password: string): {

@@ -7,9 +7,9 @@ import { User } from "./entity/user.interface";
 export class UsersService {
   private users: User[] = [];
 
-  private async getUserIndexById(id: number, notFoundException: boolean = true, customExceptionMessage?: string) {
+  private getUserIndexById(id: number, notFoundException: boolean = true, customExceptionMessage?: string) {
     const foundIndex = this.users.findIndex((u) => u.id === id);
-    if (foundIndex === -1 && notFoundException) throw new NotFoundException(customExceptionMessage || "User not found");
+      if (foundIndex === -1 && notFoundException) throw new NotFoundException(customExceptionMessage || "User not found");
     return foundIndex;
   }
 
@@ -21,8 +21,8 @@ export class UsersService {
     return max;
   }
 
-  public async getUser(id: number, customExceptionMessage?: string) {
-    return this.users[await this.getUserIndexById(id, true, customExceptionMessage)];
+  public getUser(id: number, customExceptionMessage?: string) {
+    return this.users[this.getUserIndexById(id, true, customExceptionMessage)];
   }
 
   public getUsers() {

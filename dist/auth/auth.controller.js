@@ -23,13 +23,15 @@ let AuthController = class AuthController {
     constructor(authSerice) {
         this.authSerice = authSerice;
     }
-    async register(body) {
+    async register(body, res) {
         if (body.password !== body.passwordRepeat)
             throw new common_1.BadRequestException("Given passwords do not match");
-        return await this.authSerice.register(body.login, body.password);
+        const { accessToken } = await this.authSerice.register(body.login, body.password);
+        res.cookie("authJwt", accessToken);
     }
-    async login(body) {
-        return await this.authSerice.login(body.login, body.password);
+    async login(body, res) {
+        const { accessToken } = await this.authSerice.login(body.login, body.password);
+        res.cookie("authJwt", accessToken);
     }
     async getPassword(req) {
         return req.user;
@@ -40,16 +42,18 @@ __decorate([
     (0, common_1.Post)("register"),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.RegisterDTO]),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDTO, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)("login"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDTO]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDTO, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
