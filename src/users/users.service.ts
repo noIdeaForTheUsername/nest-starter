@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { User } from "./entity/user.interface";
-import { Role } from "./entity/role.enum";
+import { AccessLevel } from "./entity/access-level.enum";
 
 @Injectable({
 
@@ -42,7 +42,7 @@ export class UsersService {
       id: this.findMaxId() + 1,
       login,
       password,
-      role: Role.User
+      accessLevel: AccessLevel.User
     };
     this.users.push(newUser);
     return newUser;

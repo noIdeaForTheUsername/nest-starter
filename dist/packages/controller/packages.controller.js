@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const packages_service_1 = require("../service/packages.service");
 const new_dto_1 = require("../dto/new.dto");
 const users_service_1 = require("../../users/users.service");
+const access_decorator_1 = require("../../auth/access.decorator");
+const access_level_enum_1 = require("../../users/entity/access-level.enum");
 let PackagesController = class PackagesController {
     packageService;
     usersService;
@@ -44,12 +46,14 @@ let PackagesController = class PackagesController {
 exports.PackagesController = PackagesController;
 __decorate([
     (0, common_1.Get)(),
+    (0, access_decorator_1.Access)(access_level_enum_1.AccessLevel.Courier),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PackagesController.prototype, "getPackages", null);
 __decorate([
     (0, common_1.Get)(":id"),
+    (0, access_decorator_1.Access)(access_level_enum_1.AccessLevel.User),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -57,6 +61,7 @@ __decorate([
 ], PackagesController.prototype, "getPackage", null);
 __decorate([
     (0, common_1.Post)("new"),
+    (0, access_decorator_1.Access)(access_level_enum_1.AccessLevel.User),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

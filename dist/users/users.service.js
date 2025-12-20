@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
-const role_enum_1 = require("./entity/role.enum");
+const access_level_enum_1 = require("./entity/access-level.enum");
 let UsersService = class UsersService {
     users = [];
     getUserIndexById(id, notFoundException = true, customExceptionMessage) {
@@ -41,7 +41,7 @@ let UsersService = class UsersService {
             id: this.findMaxId() + 1,
             login,
             password,
-            role: role_enum_1.Role.User
+            accessLevel: access_level_enum_1.AccessLevel.User
         };
         this.users.push(newUser);
         return newUser;

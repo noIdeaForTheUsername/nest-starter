@@ -2,6 +2,8 @@ import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatu
 import { PackagesService } from '../service/packages.service';
 import { NewPackageDTO } from '../dto/new.dto';
 import { UsersService } from 'src/users/users.service';
+import { Access } from 'src/auth/access.decorator';
+import { AccessLevel } from 'src/users/entity/access-level.enum';
 
 @Controller('packages')
 export class PackagesController {
@@ -11,16 +13,19 @@ export class PackagesController {
   ) {}
 
   @Get()
+  @Access(AccessLevel.Courier)
   async getPackages() {
     return this.packageService.getPackages();
   }
 
   @Get(":id")
+  @Access(AccessLevel.User)
   async getPackage(@Param("id", ParseIntPipe) id: number) {
     return this.packageService.getPackage(id);
   }
 
   @Post("new")
+  @Access(AccessLevel.User)
   @HttpCode(HttpStatus.CREATED)
   async addPackage(@Body() dto: NewPackageDTO) {
     // assert users exit

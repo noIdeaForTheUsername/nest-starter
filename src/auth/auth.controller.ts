@@ -3,7 +3,8 @@ import { RegisterDTO } from "./dto/register.dto";
 import { LoginDTO } from "./dto/login.dto";
 import { AuthService } from "./auth.service";
 import type { Response } from "express";
-import { Roles } from "./role.decorator";
+import { Access } from "./access.decorator";
+import { AccessLevel } from "src/users/entity/access-level.enum";
 
 @Controller()
 export class AuthController {
@@ -28,7 +29,7 @@ export class AuthController {
   }
 
   @Get("password")
-  @Roles(["user", "admin"])
+  @Access(AccessLevel.User)
   async getPassword(@Request() req: any) {
     return req.user;
   }

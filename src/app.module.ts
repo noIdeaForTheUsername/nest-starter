@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { PackagesModule } from './packages/packages.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { RolesGuard } from './auth/roles.guard';
+import { AccessLevelGuard } from './auth/access.guard';
 import { APP_GUARD } from '@nestjs/core';
 // import { MongooseModule } from '@nestjs/mongoose';
 
@@ -20,7 +20,7 @@ import { APP_GUARD } from '@nestjs/core';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: RolesGuard
+      useClass: AccessLevelGuard
     }
   ],
 })

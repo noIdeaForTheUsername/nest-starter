@@ -13,7 +13,7 @@ const app_service_1 = require("./app.service");
 const packages_module_1 = require("./packages/packages.module");
 const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
-const roles_guard_1 = require("./auth/roles.guard");
+const access_guard_1 = require("./auth/access.guard");
 const core_1 = require("@nestjs/core");
 let AppModule = class AppModule {
 };
@@ -30,7 +30,7 @@ exports.AppModule = AppModule = __decorate([
             app_service_1.AppService,
             {
                 provide: core_1.APP_GUARD,
-                useClass: roles_guard_1.RolesGuard
+                useClass: access_guard_1.AccessLevelGuard
             }
         ],
     })

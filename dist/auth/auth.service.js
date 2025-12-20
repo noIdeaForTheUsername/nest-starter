@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
+const access_level_enum_1 = require("../users/entity/access-level.enum");
 const users_service_1 = require("../users/users.service");
 let AuthService = class AuthService {
     usersService;
@@ -22,14 +23,14 @@ let AuthService = class AuthService {
     }
     async register(login, password) {
         const user = this.usersService.addUser(login, password);
-        const payload = { sub: user.id, login: user.login, role: user.role };
+        const payload = { sub: user.id, login: user.login, accessLevel: access_level_enum_1.AccessLevel.User };
         return { accessToken: await this.jwtService.signAsync(payload) };
     }
     async login(login, password) {
         const user = await this.usersService.getUserByLogin(login);
         if (!user || user.password !== password)
             throw new common_1.UnauthorizedException("Login or password not correct");
-        const payload = { sub: user.id, login: user.login, role: user.role };
+        const payload = { sub: user.id, login: user.login, accessLevel: user.accessLevel };
         return { accessToken: await this.jwtService.signAsync(payload) };
     }
 };

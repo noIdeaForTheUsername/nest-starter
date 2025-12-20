@@ -17,7 +17,8 @@ const common_1 = require("@nestjs/common");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const auth_service_1 = require("./auth.service");
-const role_decorator_1 = require("./role.decorator");
+const access_decorator_1 = require("./access.decorator");
+const access_level_enum_1 = require("../users/entity/access-level.enum");
 let AuthController = class AuthController {
     authSerice;
     constructor(authSerice) {
@@ -58,7 +59,7 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Get)("password"),
-    (0, role_decorator_1.Roles)(["user", "admin"]),
+    (0, access_decorator_1.Access)(access_level_enum_1.AccessLevel.User),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

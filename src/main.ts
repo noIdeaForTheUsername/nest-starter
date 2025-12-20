@@ -4,7 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { jwtConstants } from './auth/constants';
-import { RolesGuard } from './auth/roles.guard';
+import { AccessLevelGuard } from './auth/access.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
