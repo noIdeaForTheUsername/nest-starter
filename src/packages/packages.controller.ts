@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { PackagesService } from '../service/packages.service';
-import { NewPackageDTO } from '../dto/new.dto';
+import { PackagesService } from './service/packages.service';
+import { NewPackageDTO } from './dto/new.dto';
 import { UsersService } from 'src/users/users.service';
 import { Access } from 'src/auth/access.decorator';
 import { AccessLevel } from 'src/users/entity/access-level.enum';

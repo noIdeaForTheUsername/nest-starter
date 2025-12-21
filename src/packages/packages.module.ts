@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PackagesController } from './controller/packages.controller';
+import { PackagesController } from './packages.controller';
 import { PackagesService } from './service/packages.service';
 import { UsersModule } from 'src/users/users.module';
 
