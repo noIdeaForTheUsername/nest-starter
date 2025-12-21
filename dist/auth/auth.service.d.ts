@@ -10,4 +10,5 @@ export declare class AuthService {
     login(login: string, password: string): Promise<{
         accessToken: string;
     }>;
+    upgradeToCourier(userId: number): void;
 }

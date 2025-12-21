@@ -1,42 +1,47 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { PackagesService } from './service/packages.service';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { PackagesService } from './packages.service';
 import { NewPackageDTO } from './dto/new.dto';
 import { UsersService } from 'src/users/users.service';
-import { Access } from 'src/auth/access.decorator';
+import { Access } from 'src/auth/decorators/access.decorator';
 import { AccessLevel } from 'src/users/entity/access-level.enum';
+import type { UserAuth } from 'src/auth/user-auth.interface';
+import { User } from 'src/auth/decorators/user.decorator';
 
 @Controller('packages')
+@Access(AccessLevel.User)
 export class PackagesController {
 
-  constructor(private packageService: PackagesService,
-    private usersService: UsersService
-  ) {}
+  constructor(private packageService: PackagesService, private usersService: UsersService) {}
 
   @Get()
-  @Access(AccessLevel.Courier)
-  async getPackages() {
-    return this.packageService.getPackages();
+  async getPackages(@User() user: UserAuth) {
+    return this.packageService.getUserPackages(user.id);
   }
 
+  // @Get("all")
+  // @Access(AccessLevel.Courier)
+  // async getAllPackages() {
+  //   return this.packageService.getPackages();
+  // }
+
   @Get(":id")
-  @Access(AccessLevel.User)
-  async getPackage(@Param("id", ParseIntPipe) id: number) {
-    return this.packageService.getPackage(id);
+  async getPackage(@User() user: UserAuth, @Param("id", ParseIntPipe) id: number) {
+    return this.packageService.getPackage(id, user.id, user.accessLevel);
   }
 
   @Post("new")
-  @Access(AccessLevel.User)
   @HttpCode(HttpStatus.CREATED)
-  async addPackage(@Body() dto: NewPackageDTO) {
+  async addPackage(@User() sender: UserAuth, @Body() dto: NewPackageDTO) {
     // assert users exit
-    if (dto.senderId == dto.receiverId) throw new BadRequestException("Sender and receiver ID are the same");
-    this.usersService.getUser(dto.senderId, "Sender not found");
+    if (sender.id === dto.receiverId) throw new BadRequestException("Receiver ID cannot be your ID");
     this.usersService.getUser(dto.receiverId, "Receiver user not found");
-    this.packageService.addPackage(1, 2, dto.content, new Date().toISOString());
+    this.packageService.addPackage(sender.id, dto.receiverId, dto.content, new Date().toISOString());
   }
 
-  @Delete("delete/:id")
-  async removePackage(@Param("id", ParseIntPipe) id: number) {
-    this.packageService.removePackage(id);
-  }
+  // @Delete(":id")
+  // async removePackage(@User() sender: UserAuth, @Param("id", ParseIntPipe) id: number) {
+  //   if (this.packageService.getPackage(id, sender.id, sender.accessLevel).senderId !== sender.id)
+  //     throw new NotFoundException("Package with the given ID not found, or you don't have access to it");
+  //   this.packageService.removePackage(id);
+  // }
 }

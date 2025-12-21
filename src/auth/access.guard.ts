@@ -3,7 +3,8 @@ import { JsonWebTokenError, JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import { jwtConstants } from "./constants";
 import { Reflector } from "@nestjs/core";
-import { Access } from "./access.decorator";
+import { Access } from "./decorators/access.decorator";
+import { UserAuth } from "./user-auth.interface";
 
 @Injectable()
 export class AccessLevelGuard implements CanActivate {
@@ -15,19 +16,19 @@ export class AccessLevelGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromCookie(request);
-    if (!token) throw new UnauthorizedException("No token received, or its format is invalid");
+    if (!token) throw new UnauthorizedException("No valid token");
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {secret: jwtConstants.secret});
-      if (payload.accessLevel && payload.accessLevel >= minAccessLevel)
-        request["user"] = payload;
-      else
+      if (!payload.accessLevel || payload.accessLevel < minAccessLevel)
         throw new ForbiddenException("Your current access level doesn't grant you access to this data/action");
+
+      request.user = { id: payload.sub, accessLevel: payload.accessLevel } as UserAuth;
+      return true;
     } catch (e) {
       if (e instanceof ForbiddenException) throw e;
-      else throw new UnauthorizedException("Received token invalid");
+      else throw new UnauthorizedException("No valid token");
     }
-    return true;
   }
 
   private extractTokenFromCookie(request: Request): string | undefined {

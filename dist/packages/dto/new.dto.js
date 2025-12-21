@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NewPackageDTO = void 0;
 class NewPackageDTO {
-    senderId;
     receiverId;
     content;
 }

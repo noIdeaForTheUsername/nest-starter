@@ -33,6 +33,9 @@ let AuthService = class AuthService {
         const payload = { sub: user.id, login: user.login, accessLevel: user.accessLevel };
         return { accessToken: await this.jwtService.signAsync(payload) };
     }
+    upgradeToCourier(userId) {
+        this.usersService.getUser(userId).accessLevel = access_level_enum_1.AccessLevel.Courier;
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

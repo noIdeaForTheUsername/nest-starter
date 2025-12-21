@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PackagesController } from './packages.controller';
-import { PackagesService } from './service/packages.service';
+import { PackagesService } from './packages.service';
 import { UsersModule } from 'src/users/users.module';
 
 @Module({

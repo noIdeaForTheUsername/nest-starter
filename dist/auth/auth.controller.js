@@ -17,25 +17,29 @@ const common_1 = require("@nestjs/common");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const auth_service_1 = require("./auth.service");
-const access_decorator_1 = require("./access.decorator");
+const access_decorator_1 = require("./decorators/access.decorator");
 const access_level_enum_1 = require("../users/entity/access-level.enum");
+const user_decorator_1 = require("./decorators/user.decorator");
 let AuthController = class AuthController {
-    authSerice;
-    constructor(authSerice) {
-        this.authSerice = authSerice;
+    authService;
+    constructor(authService) {
+        this.authService = authService;
     }
     async register(body, res) {
         if (body.password !== body.passwordRepeat)
             throw new common_1.BadRequestException("Given passwords do not match");
-        const { accessToken } = await this.authSerice.register(body.login, body.password);
+        const { accessToken } = await this.authService.register(body.login, body.password);
         res.cookie("authJwt", accessToken);
     }
     async login(body, res) {
-        const { accessToken } = await this.authSerice.login(body.login, body.password);
+        const { accessToken } = await this.authService.login(body.login, body.password);
         res.cookie("authJwt", accessToken);
     }
     async getPassword(req) {
         return req.user;
+    }
+    async upgradeToCourier(user) {
+        this.authService.upgradeToCourier(user.id);
     }
 };
 exports.AuthController = AuthController;
@@ -58,13 +62,21 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, common_1.Get)("password"),
+    (0, common_1.Get)("me"),
     (0, access_decorator_1.Access)(access_level_enum_1.AccessLevel.User),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getPassword", null);
+__decorate([
+    (0, common_1.Post)("upgrade"),
+    (0, access_decorator_1.Access)(access_level_enum_1.AccessLevel.User),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "upgradeToCourier", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
