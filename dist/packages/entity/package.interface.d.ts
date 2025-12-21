@@ -1,3 +1,4 @@
+import { PackageStatus } from "./package-status.enum";
 export interface Package {
     id: number;
     senderId: number;
@@ -5,4 +6,5 @@ export interface Package {
     content: string;
     sentDate: string;
     deliveredDate?: string;
+    status: PackageStatus;
 }

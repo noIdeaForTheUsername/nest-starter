@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, ParseIntPipe, Patch, Post, Req, UnauthorizedException } from '@nestjs/common';
 import { PackagesService } from './packages.service';
 import { NewPackageDTO } from './dto/new.dto';
 import { UsersService } from 'src/users/users.service';
@@ -18,12 +18,6 @@ export class PackagesController {
     return this.packageService.getUserPackages(user.id);
   }
 
-  // @Get("all")
-  // @Access(AccessLevel.Courier)
-  // async getAllPackages() {
-  //   return this.packageService.getPackages();
-  // }
-
   @Get(":id")
   async getPackage(@User() user: UserAuth, @Param("id", ParseIntPipe) id: number) {
     return this.packageService.getPackage(id, user.id, user.accessLevel);
@@ -38,10 +32,9 @@ export class PackagesController {
     this.packageService.addPackage(sender.id, dto.receiverId, dto.content, new Date().toISOString());
   }
 
-  // @Delete(":id")
-  // async removePackage(@User() sender: UserAuth, @Param("id", ParseIntPipe) id: number) {
-  //   if (this.packageService.getPackage(id, sender.id, sender.accessLevel).senderId !== sender.id)
-  //     throw new NotFoundException("Package with the given ID not found, or you don't have access to it");
-  //   this.packageService.removePackage(id);
-  // }
+  @Post(":id/cancel")
+  @HttpCode(HttpStatus.OK)
+  async cancelPackage(@User() user: UserAuth, @Param("id", ParseIntPipe) id: number) {
+    this.packageService.cancelUserPackage(id, user.id);
+  }
 }

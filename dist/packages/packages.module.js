@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const packages_controller_1 = require("./packages.controller");
 const packages_service_1 = require("./packages.service");
 const users_module_1 = require("../users/users.module");
+const courier_packages_controller_1 = require("./courier-packages.controller");
 let PackagesModule = class PackagesModule {
 };
 exports.PackagesModule = PackagesModule;
 exports.PackagesModule = PackagesModule = __decorate([
     (0, common_1.Module)({
-        controllers: [packages_controller_1.PackagesController],
+        controllers: [packages_controller_1.PackagesController, courier_packages_controller_1.CourierPackagesController],
         providers: [packages_service_1.PackagesService],
         imports: [users_module_1.UsersModule]
     })
