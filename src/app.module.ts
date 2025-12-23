@@ -6,14 +6,26 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessLevelGuard } from './auth/access.guard';
 import { APP_GUARD } from '@nestjs/core';
-// import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './users/entity/user.entity';
+import { Package } from './packages/entity/package.entity';
+
 
 @Module({
   imports: [
     PackagesModule,
     UsersModule,
-    AuthModule
-    //MongooseModule.forRoot("mongodb://localhost/nest")
+    AuthModule,
+    TypeOrmModule.forRoot({
+      type: "mongodb",
+      host: "localhost",
+      port: 27017,
+      username: "",
+      password: "",
+      database: "delivery-db",
+      entities: [User, Package],
+      synchronize: true,  // TODO: REMOVE
+    })
   ],
   controllers: [AppController],
   providers: [

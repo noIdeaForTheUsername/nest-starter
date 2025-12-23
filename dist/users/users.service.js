@@ -5,53 +5,68 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
+const user_entity_1 = require("./entity/user.entity");
 const access_level_enum_1 = require("./entity/access-level.enum");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 let UsersService = class UsersService {
-    users = [];
-    getUserIndexById(id, notFoundException = true, customExceptionMessage) {
-        const foundIndex = this.users.findIndex((u) => u.id === id);
-        if (foundIndex === -1 && notFoundException)
+    users;
+    constructor(users) {
+        this.users = users;
+    }
+    async getUser(id, exceptionOnNull = true, customExceptionMessage) {
+        const u = await this.users.findOneBy({ _id: id });
+        if (!u && exceptionOnNull)
             throw new common_1.NotFoundException(customExceptionMessage || "User not found");
-        return foundIndex;
+        return u;
     }
-    findMaxId() {
-        let max = 0;
-        this.users.forEach((u) => {
-            if (u.id > max)
-                max = u.id;
-        });
-        return max;
+    async getUsers() {
+        return (await this.users.find());
     }
-    getUser(id, customExceptionMessage) {
-        return this.users[this.getUserIndexById(id, true, customExceptionMessage)];
+    async getUserByLogin(login, exceptionOnNull = true) {
+        const u = await this.users.findOneBy({ login });
+        if (!u && exceptionOnNull)
+            throw new common_1.NotFoundException("User not found");
+        return u;
     }
-    getUsers() {
-        return this.users;
-    }
-    async getUserByLogin(login) {
-        return this.users.find((u) => u.login == login);
-    }
-    addUser(login, password) {
-        if (this.users.find((u) => u.login == login))
+    async addUser(login, passwordHash) {
+        if (await this.getUserByLogin(login, false))
             throw new common_1.ConflictException("User with this login already exists");
-        const newUser = {
-            id: this.findMaxId() + 1,
+        const adminInit = true;
+        const newUser = this.users.create({
             login,
-            password,
-            accessLevel: access_level_enum_1.AccessLevel.User
-        };
-        this.users.push(newUser);
+            passwordHash,
+            accessLevel: login == "admin" ? access_level_enum_1.AccessLevel.Admin : access_level_enum_1.AccessLevel.User
+        });
+        await this.users.save(newUser);
         return newUser;
     }
-    async deleteUser(id) {
-        this.users.splice(await this.getUserIndexById(id), 1);
+    async deleteUser(id, callerUser) {
+        if (callerUser.id.equals(id) && callerUser.accessLevel == access_level_enum_1.AccessLevel.Admin)
+            throw new common_1.BadRequestException("Administrator cannot delete own user");
+        await this.users.delete({ _id: id });
+    }
+    async changeAccessLevel(userId, callerUser, newAccessLevel) {
+        if (userId.equals(callerUser.id) && callerUser.accessLevel == access_level_enum_1.AccessLevel.Admin)
+            throw new common_1.BadRequestException("You cannot revoke the administrator privileges from yourself");
+        const result = await this.users.updateOne({ _id: userId }, { $set: { accessLevel: newAccessLevel } });
+        if (result.matchedCount === 0)
+            throw new common_1.NotFoundException('User not found');
     }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
-    (0, common_1.Injectable)({})
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.MongoRepository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

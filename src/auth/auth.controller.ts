@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, Request, Res, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Post, Res } from "@nestjs/common";
 import { RegisterDTO } from "./dto/register.dto";
 import { LoginDTO } from "./dto/login.dto";
 import { AuthService } from "./auth.service";
@@ -24,7 +24,7 @@ export class AuthController {
 
 
   @Post("login")
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async login(@Body() body: LoginDTO, @Res({ passthrough: true }) res: Response) {
     const {accessToken} = await this.authService.login(body.login, body.password);
     res.cookie("authJwt", accessToken);
@@ -32,14 +32,14 @@ export class AuthController {
 
   @Get("me")
   @Access(AccessLevel.User)
-  async getPassword(@Request() req: any) {
-    return req.user;
-  }
-
-  // TODO: REMOVE THIS TEST ENDPOINT
-  @Post("upgrade")
-  @Access(AccessLevel.User)
-  async upgradeToCourier(@User() user: UserAuth) {
-    this.authService.upgradeToCourier(user.id);
+  async getOwnUser(@User() userAuth: UserAuth) {
+    const user = await this.authService.getUser(userAuth.id, false);
+    if (!user)
+      throw new NotFoundException("Apparently, you don't exist anymore...");
+    return {
+      id: user._id,
+      login: user.login,
+      accessLevel: user.accessLevel,
+    }
   }
 }

@@ -1,7 +1,8 @@
 import { AccessLevel } from "src/users/entity/access-level.enum";
+import { ObjectId } from "typeorm";
 
 export interface UserAuth {
-  id: number;
+  id: ObjectId;
   accessLevel: AccessLevel;
 
   // sub: number;

@@ -5,6 +5,7 @@ import { jwtConstants } from "./constants";
 import { Reflector } from "@nestjs/core";
 import { Access } from "./decorators/access.decorator";
 import { UserAuth } from "./user-auth.interface";
+import { ObjectId } from "mongodb";
 
 @Injectable()
 export class AccessLevelGuard implements CanActivate {
@@ -23,7 +24,7 @@ export class AccessLevelGuard implements CanActivate {
       if (!payload.accessLevel || payload.accessLevel < minAccessLevel)
         throw new ForbiddenException("Your current access level doesn't grant you access to this data/action");
 
-      request.user = { id: payload.sub, accessLevel: payload.accessLevel } as UserAuth;
+      request.user = { id: new ObjectId(payload.sub as string), accessLevel: payload.accessLevel } as UserAuth;
       return true;
     } catch (e) {
       if (e instanceof ForbiddenException) throw e;

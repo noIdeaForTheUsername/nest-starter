@@ -1,54 +1,65 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { User } from "./entity/user.interface";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { User } from "./entity/user.entity";
 import { AccessLevel } from "./entity/access-level.enum";
+import { UserAuth } from "src/auth/user-auth.interface";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MongoRepository } from "typeorm";
+import { ObjectId } from "mongodb";
 
-@Injectable({
-
-})
+@Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(
+    @InjectRepository(User)
+    private users: MongoRepository<User>
+  ) {}
 
-  private getUserIndexById(id: number, notFoundException: boolean = true, customExceptionMessage?: string) {
-    const foundIndex = this.users.findIndex((u) => u.id === id);
-      if (foundIndex === -1 && notFoundException) throw new NotFoundException(customExceptionMessage || "User not found");
-    return foundIndex;
+  public async getUser(id: ObjectId, exceptionOnNull = true, customExceptionMessage?: string) {
+    const u = await this.users.findOneBy({_id: id});
+    if (!u && exceptionOnNull) throw new NotFoundException(customExceptionMessage || "User not found");
+    return u;
   }
 
-  private findMaxId() {
-    let max = 0;
-    this.users.forEach((u) => {
-      if (u.id > max) max = u.id;
-    });
-    return max;
+  public async getUsers() {
+    return (await this.users.find());
   }
 
-  public getUser(id: number, customExceptionMessage?: string) {
-    return this.users[this.getUserIndexById(id, true, customExceptionMessage)];
+  public async getUserByLogin(login: string, exceptionOnNull = true) {
+    const u = await this.users.findOneBy({login});
+    if (!u && exceptionOnNull) throw new NotFoundException("User not found");
+    return u;
   }
 
-  public getUsers() {
-    return this.users;
-  }
-
-  public async getUserByLogin(login: string) {
-    return this.users.find((u) => u.login == login);
-  }
-
-  public addUser(login: string, password: string) {
-    if (this.users.find((u) => u.login == login))
+  public async addUser(login: string, passwordHash: string) {
+    if (await this.getUserByLogin(login, false))
       throw new ConflictException("User with this login already exists");
 
-    const newUser = {
-      id: this.findMaxId() + 1,
+    const adminInit = true;
+
+    const newUser = this.users.create({
       login,
-      password,
-      accessLevel: AccessLevel.User
-    };
-    this.users.push(newUser);
+      passwordHash,
+      accessLevel: login == "admin" ? AccessLevel.Admin : AccessLevel.User
+    });
+    await this.users.save(newUser);
     return newUser;
   }
 
-  public async deleteUser(id: number) {
-    this.users.splice(await this.getUserIndexById(id), 1);
+  public async deleteUser(id: ObjectId, callerUser: UserAuth) {
+    if (callerUser.id.equals(id) && callerUser.accessLevel == AccessLevel.Admin)
+      throw new BadRequestException("Administrator cannot delete own user");
+    await this.users.delete({_id: id});
+  }
+
+  // This should be well-protected in controllers
+  public async changeAccessLevel(userId: ObjectId, callerUser: UserAuth, newAccessLevel: AccessLevel) {
+    if (userId.equals(callerUser.id) && callerUser.accessLevel == AccessLevel.Admin)  // admin un-admining himself case
+      throw new BadRequestException("You cannot revoke the administrator privileges from yourself");
+    
+    const result = await this.users.updateOne(
+      {_id: userId},
+      {$set: {accessLevel: newAccessLevel}}
+    );
+    if (result.matchedCount === 0)
+      throw new NotFoundException('User not found');
   }
 }

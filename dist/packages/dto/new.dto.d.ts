@@ -1,4 +1,4 @@
 export declare class NewPackageDTO {
-    receiverId: number;
+    receiverId: string;
     content: string;
 }

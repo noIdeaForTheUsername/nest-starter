@@ -1,7 +1,7 @@
 import { IsEnum } from "class-validator";
 import { PackageStatus } from "../entity/package-status.enum";
 
-export class SetStatusDTO {
+export class StatusDTO {
   @IsEnum(PackageStatus)
-  newStatus: PackageStatus
+  status: PackageStatus
 }

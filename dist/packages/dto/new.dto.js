@@ -17,8 +17,8 @@ class NewPackageDTO {
 }
 exports.NewPackageDTO = NewPackageDTO;
 __decorate([
-    (0, class_validator_1.IsInt)(),
-    __metadata("design:type", Number)
+    (0, class_validator_1.IsMongoId)(),
+    __metadata("design:type", String)
 ], NewPackageDTO.prototype, "receiverId", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),

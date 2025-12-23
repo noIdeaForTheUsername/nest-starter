@@ -1,99 +1,112 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Package } from './entity/package.interface';
+import { ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Package } from './entity/package.entity';
 import { AccessLevel } from 'src/users/entity/access-level.enum';
 import { PackageStatus } from './entity/package-status.enum';
+import { InjectRepository } from '@nestjs/typeorm';
+import { LessThan, MongoRepository } from 'typeorm';
+import { ObjectId } from 'mongodb';
+import { UserAuth } from 'src/auth/user-auth.interface';
 
 @Injectable()
 export class PackagesService {
 
   // PRIVATE
-
-  private packages: Package[] = [];
-
-  private getPackageIndexById(id: number) {
-    const foundIndex = this.packages.findIndex((p) => p.id == id);
-    if (foundIndex !== -1) return foundIndex;
-    else throw new NotFoundException("Package with the given ID not found, or you don't have access to it");
-  }
+  constructor(
+    @InjectRepository(Package)
+    private packages: MongoRepository<Package>
+  ) {}
 
   // PUBLIC
 
-  public getAllPackages() {
-    return this.packages;
+  public async getUndeliveredPackages() {
+    return await this.packages.find({
+      where: { status: { $lt: PackageStatus.DELIVERED } },
+    });
   }
 
-  public getUserPackages(userId: number) {
-    return this.packages.filter((p) => userId === p.senderId || userId === p.receiverId);
+  public async getUserPackages(userId: ObjectId) {
+    return await this.packages.find({ where: {
+      $or: [{receiverId: userId}, {senderId: userId}]
+    }});
   }
 
-  public getPackage(id: number, userId: number, userAccessLevel: number) {
-    const pack = this.packages[this.getPackageIndexById(id)];
-    if (pack.senderId === userId || pack.receiverId === userId || userAccessLevel >= AccessLevel.Courier)
+  public async getPackage(id: ObjectId, caller: UserAuth) {
+    const pack = await this.packages.findOneBy({_id: id});
+    const callerOid = new ObjectId(caller.id);
+    if (pack && (pack.senderId.equals(callerOid) || pack.receiverId.equals(callerOid) || caller.accessLevel >= AccessLevel.Courier))
       return pack;
     else
       throw new NotFoundException("Package with the given ID not found, or you don't have access to it");
   }
 
-  public addPackage(senderId: number, receiverId: number,
-    content: string, sentDate: string, deliveredDate?: string) {
-    
-    // Get the current maxId
-    let maxId = 0;
-    this.packages.forEach((p) => {
-      if (p.id > maxId) maxId = p.id;
-    });
+  public async addPackage(senderId: ObjectId, receiverId: ObjectId,
+    content: string, sentDate: Date = new Date()) {
 
     // Create and push a new object
-    const newPackage: Package = {
-      id: maxId + 1,
-      senderId,
-      receiverId,
+    const newPackage = this.packages.create({
+      senderId: senderId,
+      receiverId: receiverId,
       content,
-      sentDate,
-      deliveredDate,
+      sentDate: sentDate.toISOString(),
       status: PackageStatus.CREATED
-    };
-    this.packages.push(newPackage);
+    });
+    await this.packages.save(newPackage);
     return newPackage;
   }
 
-  public removePackage(id: number) {
-    this.packages.splice(this.getPackageIndexById(id), 1);
-  }
 
-
-  // checks authorization level (it can be set to Admin for actions performed due
-  // to the server's logic) and changes the package's status with proper checks
-  public changePackageStatus(packageId: number, newStatus: PackageStatus,
+  /*checks authorization level (it can be set to Admin for actions performed due
+    to the server's logic) and changes the package's status with proper checks. The privileges are:
+    - Users: Cancel packages that were not SENT
+    - Couriers: push the status forward (and only forward, by the enum values) for PAID+ and not already DELIVERED/CANCELED/FAILED packages
+    - Admins: everything */
+  public async changePackageStatus(packageId: ObjectId, newStatus: PackageStatus,
   authorizationLevel: AccessLevel) {
-    const pack = this.packages[this.getPackageIndexById(packageId)];
+    const pack = await this.packages.findOneBy({_id: packageId});
+    if (!pack) throw new NotFoundException("Package with the given ID not found");
     // Condition variables
     const courier = authorizationLevel >= AccessLevel.Courier;
     const admin = authorizationLevel >= AccessLevel.Admin;
     const cancelling = newStatus == PackageStatus.CANCELED;
-    const updatingProgress = (newStatus > pack.status
+    const updatingProgress = (newStatus >= pack.status
       && pack.status < PackageStatus.DELIVERED
       && pack.status >= PackageStatus.PAID);
     const confirmingPayment = pack.status == PackageStatus.CREATED && newStatus == PackageStatus.PAID;
     
     // Conditions
-    if (cancelling) {  // cancelling - all allowed
-      if (pack.status >= PackageStatus.SENT && !courier) throw new ForbiddenException("Cannot cancel an already-sent package");
-      pack.status = newStatus;
+    const standardForbidden = new ForbiddenException("Not authorized to change the package status in the requested way");
+    if (!courier) {  // Normal users
+      if (!cancelling) throw standardForbidden;
+      else if (pack.status >= PackageStatus.SENT)
+        throw new ForbiddenException("Cannot cancel an already-sent package");
     }
-    else if (courier && (updatingProgress || confirmingPayment))  // courier+
-      pack.status = newStatus;
-    else if (admin)  // admin+
-      pack.status = newStatus
-    else
-      throw new ForbiddenException("Not allowed to change the package status in the requested way");
+    else if (!admin) {  // Couriers
+      if (!(updatingProgress || confirmingPayment)) throw standardForbidden;
+    }
+
+    await this.packages.updateOne(
+      {_id: packageId},
+      {$set: {status: newStatus}}
+    );
   }
 
-  // Not supposed to be used when a courier is changing the package status
-  public cancelUserPackage(packageId: number, userId: number) {
-    const pack = this.getPackage(packageId, userId, AccessLevel.User);
-    if (pack.status >= PackageStatus.SENT)
+  
+  // Not supposed to be used when a courier is changing the package status, only for the user-called cancel
+  public async cancelUserPackage(packageId: ObjectId, userId: ObjectId) {
+    const pack = await this.packages.findOneBy({_id: packageId});
+    if (pack && pack.receiverId.equals(userId) && !pack.senderId.equals(userId))
+      throw new ForbiddenException("You can only cancel packages SENT by you");
+    else if (!pack || !pack.senderId.equals(userId))
+      throw new NotFoundException("Package with the given ID not found, or you don't have access to it");
+
+    if (pack.status == PackageStatus.CANCELED)
+      return;
+    else if (pack.status >= PackageStatus.SENT)
       throw new ForbiddenException("Cannot cancel an already-sent package");
-    pack.status = PackageStatus.CANCELED;
+
+    await this.packages.updateOne(
+      {_id: packageId},
+      {$set: {status: PackageStatus.CANCELED}}
+    );
   }
 }
