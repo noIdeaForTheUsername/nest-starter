@@ -21,7 +21,8 @@ exports.PackagesModule = PackagesModule = __decorate([
     (0, common_1.Module)({
         controllers: [packages_controller_1.PackagesController, courier_packages_controller_1.CourierPackagesController],
         providers: [packages_service_1.PackagesService],
-        imports: [users_module_1.UsersModule, typeorm_1.TypeOrmModule.forFeature([package_entity_1.Package])]
+        imports: [users_module_1.UsersModule, typeorm_1.TypeOrmModule.forFeature([package_entity_1.Package])],
+        exports: [packages_service_1.PackagesService]
     })
 ], PackagesModule);
 //# sourceMappingURL=packages.module.js.map

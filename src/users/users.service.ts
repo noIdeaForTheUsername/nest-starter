@@ -44,9 +44,8 @@ export class UsersService {
     return newUser;
   }
 
-  public async deleteUser(id: ObjectId, callerUser: UserAuth) {
-    if (callerUser.id.equals(id) && callerUser.accessLevel == AccessLevel.Admin)
-      throw new BadRequestException("Administrator cannot delete own user");
+  // NO VALIDATION IN THIS METHOD
+  public async deleteUser(id: ObjectId) {
     await this.users.delete({_id: id});
   }
 

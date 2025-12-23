@@ -6,10 +6,11 @@ import { Reflector } from "@nestjs/core";
 import { Access } from "./decorators/access.decorator";
 import { UserAuth } from "./user-auth.interface";
 import { ObjectId } from "mongodb";
+import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class AccessLevelGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) {}
+  constructor(private jwtService: JwtService, private reflector: Reflector, private usersService: UsersService) {}
   
   async canActivate(context: ExecutionContext): Promise<boolean>{
     const minAccessLevel = this.reflector.getAllAndOverride(Access, [context.getHandler(), context.getClass()]);
@@ -20,11 +21,19 @@ export class AccessLevelGuard implements CanActivate {
     if (!token) throw new UnauthorizedException("No valid token");
 
     try {
+      // verify token and access
       const payload = await this.jwtService.verifyAsync(token, {secret: jwtConstants.secret});
       if (!payload.accessLevel || payload.accessLevel < minAccessLevel)
         throw new ForbiddenException("Your current access level doesn't grant you access to this data/action");
 
-      request.user = { id: new ObjectId(payload.sub as string), accessLevel: payload.accessLevel } as UserAuth;
+      // check if user exists with the same access level as in token
+      const userInJwt = { id: new ObjectId(payload.sub as string), accessLevel: payload.accessLevel } as UserAuth;
+      const userInDb = await this.usersService.getUser(userInJwt.id, true);
+      if (!userInDb || userInDb?.accessLevel != userInJwt.accessLevel)
+        throw new UnauthorizedException();
+
+      // attach to request
+      request.user = userInJwt;
       return true;
     } catch (e) {
       if (e instanceof ForbiddenException) throw e;

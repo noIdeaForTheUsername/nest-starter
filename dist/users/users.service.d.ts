@@ -10,6 +10,6 @@ export declare class UsersService {
     getUsers(): Promise<User[]>;
     getUserByLogin(login: string, exceptionOnNull?: boolean): Promise<User | null>;
     addUser(login: string, passwordHash: string): Promise<User>;
-    deleteUser(id: ObjectId, callerUser: UserAuth): Promise<void>;
+    deleteUser(id: ObjectId): Promise<void>;
     changeAccessLevel(userId: ObjectId, callerUser: UserAuth, newAccessLevel: AccessLevel): Promise<void>;
 }

@@ -9,6 +9,7 @@ import { Package } from './entity/package.entity';
 @Module({
   controllers: [PackagesController, CourierPackagesController],
   providers: [PackagesService],
-  imports: [UsersModule, TypeOrmModule.forFeature([Package])]
+  imports: [UsersModule, TypeOrmModule.forFeature([Package])],
+  exports: [PackagesService]
 })
 export class PackagesModule {}

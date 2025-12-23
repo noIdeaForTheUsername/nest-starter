@@ -109,4 +109,21 @@ export class PackagesService {
       {$set: {status: PackageStatus.CANCELED}}
     );
   }
+
+  // NO VALIDATION IN THIS METHOD
+  // cancels packages that were supposed to be RECEIVED by the user in argument
+  public async cancelUndeliveredPackages(userId: ObjectId) {
+    await this.packages.updateMany(
+      {
+        $and: [
+          { receiverId: userId },
+          { status: { $lt: PackageStatus.DELIVERED } },
+        ],
+      },
+      {
+        $set: { status: PackageStatus.CANCELED },
+      }
+    );
+  }
 }
+

@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/entity/user.entity';
 import { Package } from './packages/entity/package.entity';
+import { UserDeletionModule } from './user-deletion/user-deletion.module';
 
 
 @Module({
@@ -25,7 +26,8 @@ import { Package } from './packages/entity/package.entity';
       database: "delivery-db",
       entities: [User, Package],
       synchronize: true,  // TODO: REMOVE
-    })
+    }),
+    UserDeletionModule
   ],
   controllers: [AppController],
   providers: [

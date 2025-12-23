@@ -18,6 +18,7 @@ const core_1 = require("@nestjs/core");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./users/entity/user.entity");
 const package_entity_1 = require("./packages/entity/package.entity");
+const user_deletion_module_1 = require("./user-deletion/user-deletion.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -36,7 +37,8 @@ exports.AppModule = AppModule = __decorate([
                 database: "delivery-db",
                 entities: [user_entity_1.User, package_entity_1.Package],
                 synchronize: true,
-            })
+            }),
+            user_deletion_module_1.UserDeletionModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [

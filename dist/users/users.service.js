@@ -50,9 +50,7 @@ let UsersService = class UsersService {
         await this.users.save(newUser);
         return newUser;
     }
-    async deleteUser(id, callerUser) {
-        if (callerUser.id.equals(id) && callerUser.accessLevel == access_level_enum_1.AccessLevel.Admin)
-            throw new common_1.BadRequestException("Administrator cannot delete own user");
+    async deleteUser(id) {
         await this.users.delete({ _id: id });
     }
     async changeAccessLevel(userId, callerUser, newAccessLevel) {
